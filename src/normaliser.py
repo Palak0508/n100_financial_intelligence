@@ -1,34 +1,34 @@
 import re
-from typing import Union
 
-def normalize_year(year_val: Union[str, int, float]) -> int:
-    """
-    Normalizes various year formats into a standard 4-digit integer (e.g., 2023).
-    Handles: 'FY23', 'FY2023', '2023-24', '23-24', 2023.0, '2023'
-    """
+def normalize_year(year_val):
     if year_val is None:
         raise ValueError("Year cannot be None")
         
-    if isinstance(year_val, (int, float)):
-        year_str = str(int(year_val)).strip()
+    # Convert float/int to string cleanly
+    if isinstance(year_val, float):
+        if year_val.is_integer():
+            year_str = str(int(year_val))
+        else:
+            year_str = str(year_val)
     else:
         year_str = str(year_val).strip()
 
-    if not year_str:
+    if not year_str or year_str.isspace():
         raise ValueError("Year cannot be empty")
 
-    match_4digit = re.search(r'\b(19|20)\d{2}\b', year_str)
-    if match_4digit:
-        return int(match_4digit.group(0))
+    # If it's a completely raw number string and exceeds 4 digits, reject it (e.g., "12345")
+    if year_str.isdigit() and len(year_str) > 4:
+        raise ValueError(f"Invalid year format: '{year_val}'")
 
-    match_fy2digit = re.search(r'(?:FY|fy)\s*(\d{2})', year_str)
-    if match_fy2digit:
-        short_year = int(match_fy2digit.group(1))
-        return 2000 + short_year
-
-    match_range = re.search(r'\b(\d{2,4})\s*-\s*\d{2,4}', year_str)
-    if match_range:
-        part = match_range.group(1)
+    # Match 2 to 4 digit years with optional FY/CY prefixes or ranges
+    match = re.search(r'(?:FY|CY)?\s*(\d{2,4})', year_str, re.IGNORECASE)
+    if match:
+        part = match.group(1)
+        
+        # Double check that we didn't just extract a piece of a massive number sequence
+        if len(year_str) == 5 and year_str.isdigit():
+            raise ValueError(f"Invalid year format: '{year_val}'")
+            
         if len(part) == 4:
             return int(part)
         elif len(part) == 2:
@@ -40,20 +40,29 @@ def normalize_year(year_val: Union[str, int, float]) -> int:
     raise ValueError(f"Could not parse year format: '{year_val}'")
 
 
-def normalize_ticker(ticker_val: Union[str, None]) -> str:
-    """
-    Normalizes stock tickers to clean uppercase, stripping extensions like .NS or .BOM
-    and removing any surrounding whitespace. Preserves special chars like '&'.
-    """
+def normalize_ticker(ticker_val):
     if ticker_val is None:
         raise ValueError("Ticker cannot be None")
         
-    ticker_str = str(ticker_val).strip().upper()
+    ticker_str = str(ticker_val).strip()
     
-    if not ticker_str:
-        raise ValueError("Ticker cannot be empty")
+    # Reject empty strings, standalone dots, or empty spaces trailing into .NS
+    if not ticker_str or ticker_str == "." or ticker_str == ".NS":
+        raise ValueError("Invalid ticker format")
         
-    ticker_str = re.split(r'\.(NS|BO|BOM)$', ticker_str)[0]
-    ticker_str = re.sub(r'[^A-Z0-9_\-&]', '', ticker_str)
+    # Clean up prefixes/suffixes
+    ticker_clean = ticker_str.upper()
+    if ticker_clean.endswith(".BO"):
+        ticker_clean = ticker_clean.replace(".BO", "")
+    if ticker_clean.endswith(".BOM"):
+        ticker_clean = ticker_clean.replace(".BOM", "")
+    if ticker_clean.endswith(".NS"):
+        ticker_clean = ticker_clean.replace(".NS", "")
+        
+    # Final strip in case spaces were hiding inside
+    ticker_clean = ticker_clean.strip()
     
-    return ticker_str
+    if not ticker_clean:
+        raise ValueError("Invalid ticker format")
+        
+    return ticker_clean
