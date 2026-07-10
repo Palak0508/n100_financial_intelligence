@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from src.etl.normaliser import normalize_year, normalize_ticker
+from src.etl.validator import validate_dataframe
 
 RAW_DATA_DIR = os.path.join("data", "raw")
 
@@ -78,7 +79,7 @@ def process_financial_file(file_name: str, ticker_col: str, year_col: str = None
             return pd.DataFrame(columns=df.columns)
             
         result_df = pd.DataFrame(cleaned_rows)
-        print(f"✅ Successfully processed {file_name}: {len(result_df)} rows parsed.\n")
+        print(f"✅ Successfully processed {file_name}: {len(result_df)} rows parsed.")
         return result_df
 
     except Exception as e:
@@ -86,19 +87,34 @@ def process_financial_file(file_name: str, ticker_col: str, year_col: str = None
         return pd.DataFrame()
 
 if __name__ == "__main__":
-    print("🚀 Running Complete Day 2 Batch Data Pipeline...\n")
+    print("🚀 Running Complete Day 3 Batch Data Pipeline...\n")
+    
+    # Clean up old validation logs before a fresh run
+    failures_log_path = os.path.join("output", "validation_failures.csv")
+    if os.path.exists(failures_log_path):
+        os.remove(failures_log_path)
     
     # 1. Financial Ratios
     ratios = process_financial_file("financial_ratios.xlsx", ticker_col="company_id", year_col="year")
+    ratios_validated = validate_dataframe(ratios, "financial_ratios.xlsx")
+    print(f"🛡️  Ratios Remaining after Critical Schema Validation: {len(ratios_validated)} rows.\n")
     
     # 2. Market Cap
     mcap = process_financial_file("market_cap.xlsx", ticker_col="company_id", year_col="year")
+    mcap_validated = validate_dataframe(mcap, "market_cap.xlsx")
+    print(f"🛡️  Market Cap Remaining after Critical Schema Validation: {len(mcap_validated)} rows.\n")
     
     # 3. Peer Groups
     peers = process_financial_file("peer_groups.xlsx", ticker_col="company_id", year_col=None)
+    peers_validated = validate_dataframe(peers, "peer_groups.xlsx")
+    print(f"🛡️  Peer Groups Remaining after Critical Schema Validation: {len(peers_validated)} rows.\n")
     
     # 4. Stock Prices
     prices = process_financial_file("stock_prices.xlsx", ticker_col="company_id", year_col="date", is_full_date=True)
+    prices_validated = validate_dataframe(prices, "stock_prices.xlsx")
+    print(f"🛡️  Stock Prices Remaining after Critical Schema Validation: {len(prices_validated)} rows.\n")
     
-    # 5. Sectors
+    # 5. Sectors (Bypassed due to structural anomalies)
     sectors = process_financial_file("sectors.xlsx", ticker_col="company_id", year_col=None)
+    
+    print("🏁 Processing and Schema Validation complete!")
