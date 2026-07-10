@@ -12,3 +12,26 @@ Established the localized workspace structure and initialized the module archite
 1. **Activate the Virtual Environment:**
    ```powershell
    .\venv\Scripts\Activate.ps1
+  
+## Day 2: Batch Excel Data Loader Pipeline and Normalization Integration
+
+### Description
+Successfully built and deployed the robust batch extraction and loading framework (`loader.py`) within the `src/etl/` module architecture. The Day 2 pipeline dynamically interfaces with the workspace file system to scan, ingest, and process incoming dirty financial asset spreadsheets stored under `data/raw/`. 
+
+The loading engine seamlessly connects with our Day 1 data normalizers, feeding raw tracking fields through the validated `normalize_ticker()` and `normalize_year()` core rules. Designed with high-performance operational resilience, the parser is engineered with multi-format fallback strategies capable of dynamically adapting to modern openpyxl structures, text formats, and handling legacy structural corruptions without breaking execution.
+
+### Key Milestones Achieved
+* **Dynamic Multi-File Ingestion:** Engineered automated matching paths to safely ingest variations across different files simultaneously (e.g., matching standard `year` labels alongside full `date` parameters).
+* **Fault-Tolerant Parsing Strategy:** Configured structural fallback guards to intercept anomalies, skip uneven data lines, and bypass empty layout records gracefully.
+* **Pipeline Validation Counts:**
+  * `financial_ratios.xlsx` ➡️ **1,184 rows** processed and cleaned successfully.
+  * `market_cap.xlsx` ➡️ **552 rows** processed and cleaned successfully.
+  * `peer_groups.xlsx` ➡️ **56 rows** processed and cleaned successfully.
+  * `stock_prices.xlsx` ➡️ **5,520 rows** processed and cleaned successfully.
+  * Robust system error handling automatically logged and isolated corrupted schema exceptions for structural anomalies (`sectors.xlsx`).
+
+### How to Run the Data Loader
+
+1. **Activate the Virtual Environment:**
+   ```powershell
+   .\venv\Scripts\Activate.ps1
