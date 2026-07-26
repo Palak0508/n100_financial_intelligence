@@ -77,3 +77,15 @@ Configured a persistent database architectural layer using a local SQLite instan
 * **Market Capitalization Sync:** Successfully committed **552 clean rows** into the database.
 * **Peer Group Configurations Sync:** Successfully committed **56 clean rows** into the database.
 * **Stock Price Matrix Timelines Sync:** Successfully committed **5,520 clean rows** into the database.
+
+---
+
+## Day 5: Analytical SQL Views & Business Intelligence Query Engine
+
+### Description
+Developed an automated feature engineering and analytics module (`queries.py`) within the `src/analytics/` package directory. Built persistent, reusable SQL Views inside the database to aggregate key financial performance indicators. Programmed window functions (`LAG()` and `OVER(PARTITION BY...)`) to calculate Year-over-Year (YoY) profit margin growth trajectories and compute company-specific performance benchmarks against sector peer group averages. Added aggregate stock price profiling to evaluate trading volume histories, multi-period price bounds, and historical averages across tracked assets.
+
+### How to Setup & Run
+1. Generate Analytical SQL Views and Run Summary Query Suite:
+   ```powershell
+   python -m src.analytics.queries
